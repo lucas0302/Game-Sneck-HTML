@@ -1,14 +1,22 @@
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
+const score = document.querySelector(".score--value");
+const finalScore = document.querySelector(".final-score > span");
+const menu = document.querySelector(".menu-screen");
+const buttonPlay = document.querySelector(".btn-play");
+
 //Tem que arrumar o audio
 //const audio = new audio("../assets/audio.mp3");
 
 const size = 30;
 
-const snake = [
-    {x: 270, y: 240},
-];
+const initialPosition = {x: 270, y: 240};
+let snake = [initialPosition];
+
+const incrementeScore = ()=>{
+    score.innerText = parseInt(score.innerText) + 1;
+}
 
 const randomNumber = (max, min)=>{
     return Math.round(Math.random() * (max - min) + min);
@@ -35,18 +43,20 @@ let direction, loopId;
 const drowFood = ()=>{
     const {x, y, color} = food;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 50;
     ctx.fillStyle = color;
     ctx.fillRect(food.x, food.y, size, size);
-    ctx.shadowBlur = 0;
+    
 }
 
 const drawSnake = ()=>{
-    ctx.fillStyle = "white"
+   const brilho = ctx.shadowBlur ="white"
+    ctx.shadowBlur = 50;
+    ctx.fillStyle = brilho
     
     snake.forEach((position, index)=>{
         if(index == snake.length - 1){
-            ctx.fillStyle = "gray"
+            ctx.fillStyle = "Silver"
         }
         ctx.fillRect(position.x, position.y, size, size);
     });
@@ -94,6 +104,7 @@ const  chackEat = ()=>{
     const head = snake[snake.length - 1];
 
     if (head.x == food.x && head.y == food.y){
+        incrementeScore();
         snake.push(head);
         //audio.play();
 
@@ -111,6 +122,32 @@ const  chackEat = ()=>{
 
 }
 
+const checkCollision = ()=>{
+    const head = snake[snake.length - 1];
+
+    const canvasLimit = canvas.width - size;
+    const neckIndex = snake.length - 2;
+    const wallCollision =head.x < 0 || head.x > canvasLimit || head.y < 0 || head.y > canvasLimit;
+
+    const selfCollision = snake.find((position, index)=>{
+        return index < neckIndex && position.x === head.x && position.y == head.y;
+    });
+
+    if (wallCollision || selfCollision) {
+        gameOver();
+    }
+}
+
+const gameOver = ()=>{
+    direction = undefined;
+
+    menu.style.display = "flex";
+    finalScore.innerText  = score.innerText;
+    canvas.style.filter = "blur(2px)";
+
+
+}
+
 const gameLoop = ()=>{
     clearInterval(loopId);
 
@@ -120,10 +157,10 @@ const gameLoop = ()=>{
     moveSnake();
     drawSnake();
     chackEat();
-
+    checkCollision();
    loopId = setTimeout(()=>{
         gameLoop();
-    }, 200);
+    }, 100);
 };
 
 gameLoop();
@@ -142,4 +179,11 @@ document.addEventListener("keydown", ({ key })=>{
         direction = "up";
     }
 });
+
+buttonPlay.addEventListener("click", ()=>{
+    score.innerText ="00";
+    menu.style.display = "none";
+    canvas.style.filter = "none";
+    snake = [initialPosition];
+})
 
